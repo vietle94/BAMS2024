@@ -9,10 +9,9 @@ import numpy as np
 import glob
 
 # %%
-date = "20240531"
+date = "20240604"
 file_dir = f"/home/viet/Desktop/BAMS2024/data/raw/{date}/"
-df_sample = process_raw(file_dir, "20240531 000000", "20240531 120000")
-# df = df.sel(range=slice(0, 3000))
+df_sample = process_raw(file_dir, "20240604 090000", "20240604 180000")
 
 # %%
 ref_mean = xr.open_dataset(
@@ -23,10 +22,6 @@ df_mean_ref_sample = ref_mean.interp(
     method="linear",
     kwargs={"fill_value": "extrapolate", "bounds_error": False},
 ).drop_vars("internal_temperature_bins")
-
-# ref_mean.sel(
-#     internal_temperature_bins=df_sample.internal_temperature_bins, method='nearest'
-# ).drop_vars("internal_temperature_bins")
 
 # %%
 df_sample["ppol_c"] = df_sample["ppol_r"] - df_mean_ref_sample["ppol_ref"]
@@ -50,16 +45,19 @@ ax.xaxis.set_major_formatter(plt.matplotlib.dates.DateFormatter("%H:%M"))
 ax.xaxis.set_major_locator(plt.matplotlib.dates.HourLocator(interval=3))
 ax.set_ylim(200, 7000)
 ax.set_ylabel("Altitude (m)")
-# fig.savefig(f"{date}_kenttarova_cl61d_beta_raw.png", dpi=600, bbox_inches="tight")
+fig.savefig(
+    f"figs/{date}_kenttarova_cl61d_beta_corrected.png", dpi=600, bbox_inches="tight"
+)
 
 # %%
-time_slice = slice("2024-05-31T08:00", "2024-05-31T10:00")
+time_slice = slice("2024-06-04T16:00", "2024-06-04T16:30")
 
 # %%
 model = xr.open_dataset(
     glob.glob(f"/home/viet/Desktop/BAMS2024/data/model/{date}*.nc")[0]
 )
-model = model.sel(time=time_slice).mean(dim="time")
+# model = model.sel(time=time_slice).mean(dim="time")
+model = model.sel(time="2024-06-04T16:00") # some model files are hourly
 
 model = model.swap_dims({"level": "height"})
 model = model[["temperature", "pressure", "q"]]
@@ -103,50 +101,34 @@ ax[0].plot(beta_mol, beta_mol.range, label=r"$\beta_{mol}$")
 ax[0].set_xlim(-1e-6, 1e-6)
 ax[1].plot(beta_aerosol, beta_aerosol.range, label=r"$\beta_{aerosol}$")
 ax[0].set_ylabel("Altitude (m)")
+ax[0].set_xlabel(r"$\beta$ (m$^{-1}$ sr$^{-1}$)")
+ax[1].set_xlabel(r"$\beta$ (m$^{-1}$ sr$^{-1}$)")
 for ax_ in ax:
     ax_.legend()
     ax_.grid()
-# fig.savefig(f"figs/{date}_kenttarova_cl61d_beta_klett.png", dpi=600, bbox_inches="tight")
-
-# %%
-fig, ax = plt.subplots(1, 2, sharey=True, figsize=(9, 4))
-ax[0].plot(beta_aerosol, beta_aerosol.range, label=r"$\beta_{aerosol}$")
-
-ax[1].plot(
-    depo_volume,
-    df_sample.range,
-    ".",
-    label="Depolarization ratio",
+fig.savefig(
+    f"figs/{date}_kenttarova_cl61d_beta_klett.png", dpi=600, bbox_inches="tight"
 )
-ax[1].set_xlim(0, 0.5)
-ax[0].set_ylabel("Altitude (m)")
-for ax_ in ax:
-    ax_.grid()
-    ax_.legend()
-
-ax[1].set_ylim(0, 4000)
-# fig.savefig(f"figs/{date}_kenttarova_cl61d_beta_depo.png", dpi=600, bbox_inches="tight")
 
 # %%
 fig, ax = plt.subplots(1, 2, sharey=True, figsize=(9, 4))
+ax[0].plot(beta_aerosol, beta_aerosol.range)
+
 ax[1].plot(
     depo_aerosol,
     df_sample.range,
     ".",
-    label="Aerosol Depolarization ratio",
-)
-
-ax[1].plot(
-    depo_volume,
-    df_sample.range,
-    ".",
-    label="Depolarization ratio",
 )
 ax[1].set_xlim(0, 0.5)
 ax[0].set_ylabel("Altitude (m)")
 for ax_ in ax:
     ax_.grid()
-    ax_.legend()
-
+ax[0].set_xlim(0, 2e-6)
+ax[1].set_ylim(0, 0.3)
 ax[1].set_ylim(0, 4000)
+ax[0].set_xlabel(r"$\beta_{aerosol}$ (m$^{-1}$ sr$^{-1}$)")
+ax[1].set_xlabel(r"$\delta_{aerosol}$")
+
+fig.savefig(f"figs/{date}_kenttarova_cl61d_beta_depo.png", dpi=600, bbox_inches="tight")
+
 # %%
