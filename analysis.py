@@ -57,7 +57,7 @@ model = xr.open_dataset(
     glob.glob(f"/home/viet/Desktop/BAMS2024/data/model/{date}*.nc")[0]
 )
 # model = model.sel(time=time_slice).mean(dim="time")
-model = model.sel(time="2024-06-04T16:00") # some model files are hourly
+model = model.sel(time="2024-06-04T16:00")  # some model files are hourly
 
 model = model.swap_dims({"level": "height"})
 model = model[["temperature", "pressure", "q"]]
@@ -71,7 +71,7 @@ mol_scatter = molecular_backscatter(
 
 beta_mol = mol_scatter / 1000
 depo_mol = rayleigh.depo(
-    rayleigh.f(910.55, 425, rayleigh.humidity_conversion(model["q"]))
+    rayleigh.f(0.91055, 425, rayleigh.humidity_conversion(model["q"]))
 )
 
 beta_aerosol = forward(
