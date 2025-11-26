@@ -12,6 +12,7 @@ import glob
 date = "20240604"
 file_dir = f"/home/viet/Desktop/BAMS2024/data/raw/{date}/"
 df_sample = process_raw(file_dir, "20240604 090000", "20240604 180000")
+df_sample = df_sample.sel(range=slice(50, None))
 
 # %%
 ref_mean = xr.open_dataset(
@@ -29,7 +30,8 @@ df_sample["xpol_c"] = df_sample["xpol_r"] - df_mean_ref_sample["xpol_ref"]
 df_sample["beta_c"] = (df_sample["ppol_c"] + df_sample["xpol_c"]) * (df_sample.range**2)
 
 df_sample["time"] = df_sample.time + pd.Timedelta(hours=3)
-df_sample["range"] = df_sample.range + 276
+# df_sample["range"] = df_sample.range + 276 # This would mess up values from model data. better to
+# change it in the end
 
 # %%
 fig, ax = plt.subplots(figsize=(9, 4))
